@@ -20,37 +20,76 @@ class HabrParser(HTMLParser):
   MAGIC_LENGTH = 6
   inside_forbidden_tag = False
 
+  # order is important for the replacement
+  HABR_LINKS = ['href="https://habr.com/ru', 'href="https://habr.com']
+
   file = None
 
   def handle_starttag(self, tag, attrs):
+    """
+    Write the tag along with its attributes.
+    Change the href in case it's a link
+    In case we enter script or style tag - 
+    we should memorize it and do not change the text inside before we leave the tag
+    """
     if tag in self.FORBIDDEN_TAGS:
       self.inside_forbidden_tag = True
 
     text = self.get_starttag_text()
 
     if tag == 'a' and 'href' in [i[0] for i in attrs]:
-      self.file.write(text.replace('href="https://habr.com/ru', 'href="'))
+      self.file.write(self.replace_habr_links(text))
     else:
       self.file.write(text)
 
+  def replace_habr_links(self, text):
+    for link in self.HABR_LINKS:
+      text = text.replace(link, 'href="')
+    return text
+
   def handle_endtag(self, tag):
+    """
+    Write the end tag. In case we leave script or style tag -
+    remove the constraint that does not allow us to change the data
+    """
     if tag in self.FORBIDDEN_TAGS:
       self.inside_forbidden_tag = False
     self.file.write('</' + tag + '>')
 
   def handle_data(self, data):
     if not self.inside_forbidden_tag:
-      begins_with_space = data[0] == ' '
-      ends_with_space = data[len(data) - 1] == ' '
-
-      words = re.findall(r"[\w']+", data)
-      data = ' '.join([(self.append_tm(w) if len(w) == self.MAGIC_LENGTH else w)
-                       for w in words])
-
-      data = (' ' if begins_with_space else '') + \
-          data + (' ' if ends_with_space else '')
+      data = self.amend_text_data_with_tm(data)
 
     self.file.write(data)
+
+  def amend_text_data_with_tm(self, data):
+    """
+    insert TM sign after each word with exactly 6 chars in it
+    """
+    words = re.findall(r"[\w']+", data)
+    word_delimiters = re.findall(r"[\W]+", data)
+
+    if not words:
+      if not word_delimiters:
+        return data
+      else:
+        return ''.join(word_delimiters)
+
+    begins_with_word = data.index(words[0]) == 0
+
+    output_data = ''
+
+    if not begins_with_word:
+      output_data = word_delimiters[0]
+      word_delimiters = word_delimiters[1:]
+
+    for index, word in enumerate(words):
+      output_data += self.append_tm(word) if len(
+          word) == self.MAGIC_LENGTH else word
+      if index < len(word_delimiters):
+        output_data += word_delimiters[index]
+
+    return output_data
 
   def append_tm(self, word):
     return word + u"\u2122"
@@ -73,9 +112,6 @@ class HabrHelper:
     if path.split('.')[-1] in ['png', 'woff', 'woff2', 'ttf', 'css', 'js', 'jpg']:
       return path.replace(HABR_HOST + '/', '')
     return HTML_DIRECTORY + '/page' + path.replace(HABR_HOST, '').replace('/', '_') + '.html'
-
-  def replace_habr_links(self, html_string):
-    return html_string.replace('href="https://habr.com/', 'href="127.0.0.1"')
 
   def load_file(self, url, content_stream, is_media):
     file_path = url.replace(HABR_HOST, '')
@@ -126,19 +162,13 @@ class Proxy(http.server.SimpleHTTPRequestHandler):
   helper = HabrHelper()
 
   def do_GET(self):
-    """ To do: separate handling for css, fonts etc. """
     habr_path = self.helper.get_habr_path(self.path)
     output_file_name = self.helper.get_file_name_from_habr_path(habr_path)
 
-    if not os.path.isfile(output_file_name):
-      self.helper.get_file_from_server(habr_path, output_file_name)
-
-    print(self.path, habr_path, output_file_name)
-
-    # TODO - no .html at the end pf images/fonts
+    # if not os.path.isfile(output_file_name):
+    self.helper.get_file_from_server(habr_path, output_file_name)
 
     if os.path.isfile(output_file_name):
-      print("on local " + output_file_name)
       self.output_file_content(output_file_name)
 
   def output_file_content(self, file_path):
