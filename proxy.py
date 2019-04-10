@@ -181,5 +181,8 @@ if __name__ == '__main__':
   web_dir = os.path.dirname(os.path.realpath(__file__))
   os.chdir(web_dir)
 
+  if not os.path.isdir(HTML_DIRECTORY):
+    os.mkdir(HTML_DIRECTORY)
+
   httpd = HTTPServer((HOST, PORT), Proxy)
   httpd.serve_forever()
