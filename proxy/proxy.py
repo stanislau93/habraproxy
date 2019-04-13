@@ -34,13 +34,11 @@ class Proxy(SimpleHTTPRequestHandler):
         if 'text/html' in content_type:
             charset = self.helper.get_charset(content_type)
             content = response.read().decode(charset)
-            file_name = self.parser.parse(content)
+            parsed = self.parser.parse(content)
 
             self.send_response(200)
             self.end_headers()
-
-            with open(file_name, 'rb') as file:
-                self.wfile.write(file.read())
+            self.wfile.write(parsed)
         else:
             is_media = content_type not in [
                 'text/css', 'application/javascript']

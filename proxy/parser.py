@@ -31,7 +31,12 @@ class HabrParser(HTMLParser):
             self.set_output_buffer(tmp_file)
             self.feed(html)
 
-        return self.TEMP_FILE_NAME
+        with open(self.TEMP_FILE_NAME, 'rb') as tmp_file:
+            output = tmp_file.read()
+
+        os.remove(self.TEMP_FILE_NAME)
+
+        return output
 
     def handle_starttag(self, tag, attrs):
         """

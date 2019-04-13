@@ -2,3 +2,6 @@ __pycache__/
 pages/
 images/
 fonts/
+*.webmanifest
+*.html
+*.ico
