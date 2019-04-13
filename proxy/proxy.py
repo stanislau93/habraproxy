@@ -1,13 +1,9 @@
 """Contains Proxy class and launches the habrproxy programm"""
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import urllib.request
-import os
 
 from .habr_helper import HabrHelper
-from parser import HabrParser
-
-PORT = 4443
-HOST = '127.0.0.1'
+from .parser import HabrParser
 
 
 class Proxy(SimpleHTTPRequestHandler):
@@ -47,10 +43,3 @@ class Proxy(SimpleHTTPRequestHandler):
         elif content_type.split('/')[0] in ['image', 'font']:
             file_path = self.helper.replace_host_in_link(url)
             self.helper.store_file(file_path, response.fp, is_media=True)
-
-if __name__ == '__main__':
-    WEB_DIR = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(WEB_DIR)
-
-    httpd = HTTPServer((HOST, PORT), Proxy)
-    httpd.serve_forever()

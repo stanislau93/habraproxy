@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 EXPOSE 4443
 
-CMD ["python3", "proxy.py"]
+CMD ["python3", "server.py"]
