@@ -30,6 +30,7 @@ class ProxyHelper(object):
     def store_file(self, file_path, content_stream, is_media):
         """Given file content stores it either as a binary (e.g. image) or string file on local system"""
         file_path = '/' + file_path if file_path[0] != '/' else file_path
+        file_path = file_path + 'file' if file_path[-1] == '/'else file_path
 
         self.create_subfolders_if_required(file_path)
 
@@ -54,7 +55,7 @@ class ProxyHelper(object):
         for folder in path.split('/')[:-1]:
             builded_path += folder + '/'
 
-            if (os.path.isdir(builded_path)):
+            if os.path.isdir(builded_path):
                 continue
             else:
                 os.mkdir(builded_path)

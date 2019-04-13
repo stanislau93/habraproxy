@@ -1,6 +1,7 @@
 """Contains Proxy class and launches the habrproxy programm"""
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import urllib.request
+import os
 
 from .habr_helper import HabrHelper
 from .parser import HabrParser
@@ -30,16 +31,28 @@ class Proxy(SimpleHTTPRequestHandler):
         if not content_type:
             return
 
-        if content_type in ['text/css', 'application/javascript']:
-            file_path = self.helper.replace_host_in_link(url)
-            self.helper.store_file(file_path, response.fp, is_media=False)
-        elif 'text/html' in content_type:
+        if 'text/html' in content_type:
             charset = self.helper.get_charset(content_type)
             content = response.read().decode(charset)
+            file_name = self.parser.parse(content)
+
             self.send_response(200)
             self.end_headers()
-            parsed = self.parser.parse(content)
-            self.wfile.write(parsed)
-        elif content_type.split('/')[0] in ['image', 'font']:
+
+            with open(file_name, 'rb') as file:
+                self.wfile.write(file.read())
+        else:
+            is_media = content_type not in [
+                'text/css', 'application/javascript']
             file_path = self.helper.replace_host_in_link(url)
-            self.helper.store_file(file_path, response.fp, is_media=True)
+            file_path = file_path[1:] if file_path[0] == '/' else file_path
+
+            self.helper.store_file(file_path, response.fp, is_media=is_media)
+
+            if os.path.isdir(file_path):
+                file_path = file_path + 'file'
+
+            with open(file_path, 'rb') as resource_file:
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(resource_file.read())

@@ -1,4 +1,5 @@
 """Contains HTMLParser extension for Habr"""
+import html
 from html.parser import HTMLParser
 from .habr_helper import HabrHelper
 
@@ -8,6 +9,7 @@ import os
 class HabrParser(HTMLParser):
     """Handles parsing of Habr html pages"""
     FORBIDDEN_TAGS = ['style', 'script']
+    TEMP_FILE_NAME = 'tmp.html'
     inside_forbidden_tag = False
 
     file = None
@@ -19,18 +21,17 @@ class HabrParser(HTMLParser):
     prepend_before_end = ''
     prepended_resources = []
 
+    def set_output_buffer(self, buffer):
+        """Needed for testing the parsing"""
+        self.file = buffer
+
     def parse(self, html):
         """Begins parsing process. Writes parsed page to a temp file which can be read by the Proxy class"""
-        with open('tmp.html', 'w+') as tmp_file:
-            self.file = tmp_file
+        with open(self.TEMP_FILE_NAME, 'w+') as tmp_file:
+            self.set_output_buffer(tmp_file)
             self.feed(html)
-        output = b''
 
-        with open('tmp.html', 'rb') as tmp_file:
-            output = tmp_file.read()
-
-        os.remove('tmp.html')
-        return output
+        return self.TEMP_FILE_NAME
 
     def handle_starttag(self, tag, attrs):
         """
@@ -44,7 +45,7 @@ class HabrParser(HTMLParser):
 
         text = self.get_starttag_text()
 
-        if tag == 'a':
+        if tag in ['a', 'form']:
             text = self.helper.replace_host_in_link(text)
         elif tag == 'use':
             text = text.replace(self.parse_tag_use(attrs), '')
@@ -85,5 +86,6 @@ class HabrParser(HTMLParser):
         """Parse text data. Send to helper in order to perform specific logic"""
         if not self.inside_forbidden_tag:
             data = self.helper.amend_text_data_with_tm(data)
+            data = html.escape(data)
 
         self.file.write(data)

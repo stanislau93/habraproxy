@@ -1,9 +1,11 @@
+"""contains HabrHelper class"""
 import re
 
 from .proxy_helper import ProxyHelper
 
 
 class HabrHelper(ProxyHelper):
+    """Contains habr.com specific helper functionality"""
     MAGIC_LENGTH = 6
 
     # order is important for the replacement
@@ -40,4 +42,5 @@ class HabrHelper(ProxyHelper):
         return output_data
 
     def append_tm(self, word):
+        """appends tm sign to a given word"""
         return word + u"\u2122"
