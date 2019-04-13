@@ -1,5 +1,5 @@
 """Contains Proxy class and launches the habrproxy programm"""
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler
 import urllib.request
 import os
 

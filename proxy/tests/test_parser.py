@@ -1,6 +1,7 @@
-import pytest
 import sys
 import io
+
+import pytest
 
 from ..parser import HabrParser
 

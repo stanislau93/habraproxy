@@ -1,7 +1,7 @@
-import pytest
 import shutil
 import os
 import io
+import pytest
 
 from ..habr_helper import HabrHelper
 
@@ -42,7 +42,7 @@ class TestHabrHelper:
     ]
 
     @pytest.fixture(scope="session", autouse=True)
-    def change_dir(self, request):
+    def change_dir(self):
         os.chdir(self.test_dir)
 
     @pytest.mark.parametrize("data,expected_output", testdata_amend_with_tm)
@@ -58,7 +58,7 @@ class TestHabrHelper:
         assert expected_habr_path == self.helper.get_remote_path(local_path)
 
     @pytest.mark.parametrize("path,root_folder", testdata_create_subfolders)
-    def test_create_subfolders_if_required(self, path, root_folder):
+    def test_create_subfolders(self, path, root_folder):
         self.helper.create_subfolders_if_required(path)
         assert os.path.isdir(self.test_dir + '/' +
                              '/'.join(path.split('/')[:-1]))

@@ -1,9 +1,9 @@
 """Contains HTMLParser extension for Habr"""
 import html
+import os
+
 from html.parser import HTMLParser
 from .habr_helper import HabrHelper
-
-import os
 
 
 class HabrParser(HTMLParser):
@@ -16,8 +16,10 @@ class HabrParser(HTMLParser):
 
     helper = HabrHelper()
 
-    # required for e.g. XML files, that cannot be used via http due to host
-    # mismatch and have to be copied and injected directly into HTML
+    """
+    Required for e.g. XML files, that cannot be used via http due to host
+    mismatch and have to be copied and injected directly into HTML
+    """
     prepend_before_end = ''
     prepended_resources = []
 
@@ -25,11 +27,14 @@ class HabrParser(HTMLParser):
         """Needed for testing the parsing"""
         self.file = buffer
 
-    def parse(self, html):
-        """Begins parsing process. Writes parsed page to a temp file which can be read by the Proxy class"""
+    def parse(self, html_string):
+        """
+        Begins parsing process. Writes parsed page to a
+        temp file which can be read by the Proxy class
+        """
         with open(self.TEMP_FILE_NAME, 'w+') as tmp_file:
             self.set_output_buffer(tmp_file)
-            self.feed(html)
+            self.feed(html_string)
 
         with open(self.TEMP_FILE_NAME, 'rb') as tmp_file:
             output = tmp_file.read()
@@ -40,10 +45,9 @@ class HabrParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         """
-        Write the tag along with its attributes.
-        Change the href in case it's a link
-        In case we enter script or style tag
-        we should memorize it and do not change the text inside before we leave the tag
+        Write the tag along with its attributes. Change the href in case it's a link
+        In case we enter script or style tag we should memorize it and do not
+        change the text inside before we leave the tag
         """
         if tag in self.FORBIDDEN_TAGS:
             self.inside_forbidden_tag = True

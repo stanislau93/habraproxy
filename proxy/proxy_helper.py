@@ -18,17 +18,23 @@ class ProxyHelper(object):
         """Given a path to localhost resource converts it into a remote host path"""
         if self.LOCALHOST in local_path:
             return local_path.replace(self.LOCALHOST, self.REMOTE_HOST)
-        else:
-            return self.REMOTE_HOST + local_path
+
+        return self.REMOTE_HOST + local_path
 
     def replace_host_in_link(self, text, remove=True):
-        """Given a text replaces all occurencies of links to remote host by either empty string or localhost link"""
+        """
+        Given a text replaces all occurencies of links
+        to remote host by either empty string or localhost link
+        """
         for link in self.REMOTE_HOST_LINKS:
             text = text.replace(link, ('' if remove else self.LOCALHOST_FULL))
         return text
 
     def store_file(self, file_path, content_stream, is_media):
-        """Given file content stores it either as a binary (e.g. image) or string file on local system"""
+        """
+        Given file content store it either as a binary (e.g. image)
+        or string file on local system
+        """
         file_path = '/' + file_path if file_path[0] != '/' else file_path
         file_path = file_path + 'file' if file_path[-1] == '/'else file_path
 
@@ -45,7 +51,10 @@ class ProxyHelper(object):
             local_file.write(content)
 
     def create_subfolders_if_required(self, path):
-        """For each folder in path - creates it on local system, if it does not exist yet, so the file can be stored safely"""
+        """
+        For each folder in path - creates it on local system,
+        if it does not exist yet, so the file can be stored safely
+        """
         builded_path = ''
 
         # remove first slash and parent folder redirects
@@ -61,7 +70,10 @@ class ProxyHelper(object):
                 os.mkdir(builded_path)
 
     def get_charset(self, content_type=''):
-        """Tries to extract charset from the content-type header. Alternatively returns default charset"""
+        """
+        Tries to extract charset from the content-type header.
+        Alternatively returns default charset
+        """
         match = re.search(r'charset=([\w-]+)', content_type)
         return match.group(1) if match else self.DEFAULT_CHARSET
 
